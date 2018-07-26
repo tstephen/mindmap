@@ -1,0 +1,54 @@
+/*
+ *  MindMapper - web based mind mapping tool.
+ *  Copyright (C) 2018 Tim Stephenson
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+/* FONTS */
+@import url('https://fonts.googleapis.com/css?family=Ubuntu:400italic,400,700');
+@import url('https://fonts.googleapis.com/css?family=Signika');
+@import url('https://api.knowprocess.com/webjars/knowprocess-icons/3.0.0/style.css ');
+
+a {
+  color: #9e3472;
+}
+a:active,
+a:hover {
+  color: #cc86c4/*#a86994*//*#7ba19a*/;
+}
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  font-family: 'Signika', sans-serif;
+  font-weight: 500;
+}
+body,
+text {
+  font-family: "Ubuntu", sans-serif;
+}
+.navbar {
+  font-size: 2rem;
+}
+.navbar-brand img {
+  height: 48px;
+}
+.draggable {
+  cursor: move;
+}
+.loaded-btn {
+  display: none;
+}
+text.link:active,
+text.link:hover {
+  text-decoration: underline;
+}
