@@ -18,6 +18,7 @@
  */
 var del         = require('del');
 var gulp        = require('gulp');
+var gutil       = require('gulp-util');
 var jshint      = require('gulp-jshint');
 var uglify      = require('gulp-uglify');
 var concat      = require('gulp-concat');
@@ -28,6 +29,10 @@ var replace     = require('gulp-replace');
 var scp         = require('gulp-scp2');
 var workboxBuild = require('workbox-build');
 var zip         = require('gulp-zip');
+
+var env = gutil.env.env || 'dev';
+console.warn('ENVIRONMENT SET TO: '+env);
+var config = require('./config.js')[env];
 
 gulp.task('clean', function(done) {
   return del(['dist'], done);
@@ -42,7 +47,7 @@ gulp.task('scripts', function() {
   return gulp.src([
     'src/js/**/*.js'
   ])
-  .pipe(uglify())
+  .pipe(config.js.uglify ? uglify({ mangle: true }) : gutil.noop())
   .pipe(gulp.dest('dist/js'));
 });
 
@@ -60,7 +65,7 @@ gulp.task('styles', function() {
   return gulp.src([
     'src/css/**/*.css'
   ])
-  .pipe(minifyCSS())
+  .pipe(config.css.minify ? minifyCSS() : gutil.noop())
   .pipe(gulp.dest('dist/css'));
 });
 
@@ -84,7 +89,24 @@ gulp.task('package', () =>
       .pipe(gulp.dest('dist'))
 );
 
+gulp.task('build',
+  gulp.series('compile', 'assets', 'gen-sw')
+);
+
 gulp.task('install',
   gulp.series('compile', 'assets', 'gen-sw', 'package')
 );
+
+gulp.task('deploy', function() {
+  return gulp.src(['dist/**/*','!dist/archive.zip'])
+  .pipe(scp({
+    host: config.server.host,
+    username: config.server.usr,
+    privateKey: require('fs').readFileSync(config.server.keyFile),
+    dest: config.server.dir
+  }))
+  .on('error', function(err) {
+    console.log(err);
+  });
+});
 

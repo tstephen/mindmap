@@ -1,3 +1,6 @@
+# Build configuration, potentially sensitive
+config.js
+
 # Logs
 logs
 *.log

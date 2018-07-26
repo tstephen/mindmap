@@ -26,6 +26,7 @@ var $mm = (function () {
     scale: 1.0,
     scaleStep: 0.25,
     selectedElement: false,
+    server: 'https://mindmapper.knowprocess.com',
     svgContainer: document.getElementById('svg-content')
   };
 
@@ -33,7 +34,7 @@ var $mm = (function () {
     var data = serializer.serializeToString(me.modelDom);
     if (data.indexOf('xml-stylesheet') == -1) {
       console.log('adding xsl stylesheet to render mind map');
-      data = data.replace(/<map/, '<?xml-stylesheet type="text/xsl" href="https://raw.githubusercontent.com/tstephen/mindmap/master/src/xslt/mm2svg.xslt" alternate="no" ?><map')
+      data = data.replace(/<map/, '<?xml-stylesheet type="text/xsl" href="'+me.server+'/xslt/mm2svg.xslt" alternate="no" ?><map')
       if (!me.fileName.endsWith('.svg')) me.fileName += '.svg';
     }
     var file = new Blob([data], {type: 'text/xml'});
@@ -134,7 +135,7 @@ var $mm = (function () {
 
   function fetchRenderer() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'http://localhost:8085/xslt/mm2svg.xslt');
+    xhr.open('GET', me.server+'/xslt/mm2svg.xslt');
     xhr.onload = function() {
       if (xhr.status === 200) {
         transformer.importStylesheet(xhr.responseXML);
