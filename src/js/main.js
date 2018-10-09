@@ -22,6 +22,7 @@ var $mm = (function () {
   var transformer = new XSLTProcessor();
   var me = {
     fileName: 'mind-map.mm',
+    fontSize: 14,
     readOnly: false,
     scale: 1.0,
     scaleStep: 0.25,
@@ -29,6 +30,10 @@ var $mm = (function () {
     server: 'https://mindmapper.knowprocess.com',
     svgContainer: document.getElementById('svg-content')
   };
+
+  function click(evt) {
+    console.log('click');
+  }
 
   function download() {
     var data = serializer.serializeToString(me.modelDom);
@@ -64,9 +69,27 @@ var $mm = (function () {
     });
   }
 
+  function dragEndOrClick(evt) {
+    console.log('dragEndOrClick');
+    var coord = getMousePosition(evt);
+    if (me.selectedElement && Math.abs(me.curPos.x - coord.x) > 10
+        && Math.abs(me.curPos.y - coord.y) > 10) {
+      dragEnd(evt);
+    } else {
+      // click(evt);
+      // editText(evt);
+    }
+  }
+
+  function dragEnd(evt) {
+    console.log('dragEnd');
+    renderSvg();
+    me.selectedElement = null;
+  }
+
   function drag(evt) {
-    console.log('drag');
     if (me.selectedElement) {
+      console.log('drag: '+me.selectedElement.id);
       evt.preventDefault();
       var coord = getMousePosition(evt);
       switch (me.selectedElement.tagName) {
@@ -77,15 +100,15 @@ var $mm = (function () {
               - evt.target.nextElementSibling.getAttributeNS(null, "x");
           var dy = me.selectedElement.getAttributeNS(null, "cy")
               - evt.target.nextElementSibling.getAttributeNS(null, "y");
-          evt.target.nextElementSibling.setAttributeNS(null, "x", coord.x-dx);
-          evt.target.nextElementSibling.setAttributeNS(null, "y", coord.y-dy);
+          evt.target.nextElementSibling.setAttributeNS(null, "x", coord.x-dx-me.dragOffset.x);
+          evt.target.nextElementSibling.setAttributeNS(null, "y", coord.y-dy-me.dragOffset.y);
         }
-        me.selectedElement.setAttributeNS(null, "cx", coord.x);
-        me.selectedElement.setAttributeNS(null, "cy", coord.y);
+        me.selectedElement.setAttributeNS(null, "cx", coord.x - me.dragOffset.x);
+        me.selectedElement.setAttributeNS(null, "cy", coord.y - me.dragOffset.y);
         var modelEl = me.modelDom.querySelector('[ID="'+evt.target.getAttribute('id')+'"] Bounds');
         if (modelEl != undefined) {
-          modelEl.setAttribute('x', coord.x);
-          modelEl.setAttribute('y', coord.y);
+          modelEl.setAttribute('x', coord.x - me.dragOffset.x);
+          modelEl.setAttribute('y', coord.y - me.dragOffset.y);
         }
         break;
       case 'line':
@@ -103,17 +126,29 @@ var $mm = (function () {
         }
         break;
       case 'rect':
+        // update view
         if (evt.target.nextElementSibling != undefined
             && evt.target.nextElementSibling.tagName == 'text') {
-          evt.target.nextElementSibling.setAttributeNS(null, "x", coord.x);
-          evt.target.nextElementSibling.setAttributeNS(null, "y", coord.y);
+          var dx = me.selectedElement.getAttributeNS(null, "x")
+              - evt.target.nextElementSibling.getAttributeNS(null, "x");
+          var dy = me.selectedElement.getAttributeNS(null, "y")
+              - evt.target.nextElementSibling.getAttributeNS(null, "y");
+          evt.target.nextElementSibling.setAttributeNS(null, "x", coord.x -dx - me.dragOffset.x);
+          evt.target.nextElementSibling.setAttributeNS(null, "y", coord.y -dy - me.dragOffset.y);
         }
-        me.selectedElement.setAttributeNS(null, "x", coord.x);
-        me.selectedElement.setAttributeNS(null, "y", coord.y);
+        me.selectedElement.setAttributeNS(null, "x", coord.x - me.dragOffset.x);
+        me.selectedElement.setAttributeNS(null, "y", coord.y - me.dragOffset.y);
+        // update model
         var modelEl = me.modelDom.querySelector('[ID="'+evt.target.getAttribute('id')+'"] Bounds');
         if (modelEl != undefined) {
-          modelEl.setAttribute('x', coord.x);
-          modelEl.setAttribute('y', coord.y);
+          console.log('  model '+evt.target.getAttribute('id')+' updating '
+              +modelEl.getAttribute('x')+','+modelEl.getAttribute('y')
+              +' to '+coord.x+','+coord.y);
+          modelEl.setAttribute('x', coord.x - me.dragOffset.x);
+          modelEl.setAttribute('y', coord.y - me.dragOffset.y);
+          console.log('  model '+evt.target.getAttribute('id')+' updated to: '
+              +modelEl.getAttribute('x')+','+modelEl.getAttribute('y')
+              +' '+coord.x+','+coord.y);
         }
         break;
       case 'text':
@@ -127,10 +162,10 @@ var $mm = (function () {
     }
   }
 
-  function endDrag(evt) {
-    console.log('endDrag');
-    renderSvg();
-    me.selectedElement = null;
+  function editText(evt) {
+    console.log('editText: '+evt.target.ID);
+      document.querySelector('.text-editing-container')
+          .setAttribute('style', 'display:inline;position:absolute;top:100px;left:100px;width:200px;height:100px;z-index:100');
   }
 
   function fetchRenderer() {
@@ -146,7 +181,9 @@ var $mm = (function () {
     xhr.send();
   }
 
+  // translate screen co-ords to SVG co-ords
   function getMousePosition(evt) {
+    if (evt.touches) { evt = evt.touches[0]; }
     var CTM = me.svgContainer.firstElementChild.getScreenCTM();
     return {
       x: (evt.clientX - CTM.e) / CTM.a,
@@ -157,8 +194,20 @@ var $mm = (function () {
   function makeDraggable(svg) {
     svg.addEventListener('mousedown', startDrag);
     svg.addEventListener('mousemove', drag);
-    svg.addEventListener('mouseup', endDrag);
-    svg.addEventListener('mouseleave', endDrag);
+    svg.addEventListener('mouseup',  dragEndOrClick);
+    svg.addEventListener('mouseleave',  dragEnd);
+
+    // At least under chrome causes drop to 'jump' (last drag wildly offset)
+    // svg.addEventListener('dragstart', startDrag);
+    // svg.addEventListener('drag', drag);
+    // svg.addEventListener('dragend',  dragEnd);
+    // svg.addEventListener('drop',  dragEnd);
+
+    svg.addEventListener('touchstart', startDrag);
+    svg.addEventListener('touchmove', drag);
+    svg.addEventListener('touchend',  dragEndOrClick);
+    svg.addEventListener('touchleave',  dragEnd);
+    svg.addEventListener('touchcancel',  dragEnd);
   }
 
   function openFile() {
@@ -193,8 +242,18 @@ var $mm = (function () {
 
     // enable edit
     if (!me.readOnly) {
-      document.querySelectorAll('.node,.node-label').forEach(function(n) {
+      document.querySelectorAll('.node').forEach(function(n) {
         n.classList.add('draggable');
+        // n.addEventListener('dragstart', startDrag);
+        // n.addEventListener('drag', drag);
+        // n.addEventListener('dragend',  dragEnd);
+        // n.addEventListener('drop',  dragEnd);
+      });
+      document.querySelectorAll('.node-label').forEach(function(n) {
+        n.addEventListener('click', editText, false/*capture*/);
+      });
+      document.querySelectorAll('.node').forEach(function(n) {
+        n.addEventListener('click', editText, false/*capture*/);
       });
     }
   }
@@ -205,8 +264,14 @@ var $mm = (function () {
 
   function startDrag(evt) {
     console.log('startDrag');
+    me.curPos  = getMousePosition(evt);
     if (evt.target.classList.contains('draggable')) {
       me.selectedElement = evt.target;
+
+
+      me.dragOffset = me.curPos;
+      me.dragOffset.x -= parseFloat(me.selectedElement.getAttributeNS(null, "x"));
+      me.dragOffset.y -= parseFloat(me.selectedElement.getAttributeNS(null, "y"));
     }
   }
 
