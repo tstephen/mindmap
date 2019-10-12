@@ -18,7 +18,7 @@
   "homepage": "https://github.com/tstephen/mindmap.knowprocess.com#readme",
   "devDependencies": {
     "del": "^3.0.0",
-    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp": "github:gulpjs/gulp#v4.0.0",
     "gulp-autoprefixer": "^4.1.0",
     "gulp-concat": "^2.6.1",
     "gulp-jshint": "^2.1.0",
@@ -29,10 +29,10 @@
     "gulp-scp2": "^0.2.0",
     "gulp-uglify": "^3.0.0",
     "gulp-zip": "^4.1.0",
-    "jshint": "^2.9.5",
+    "jshint": "^2.10.2",
     "workbox-build": "^3.4.1"
   },
   "dependencies": {
-    "bootstrap": "^4.1.1"
+    "bootstrap": "^4.3.1"
   }
 }
