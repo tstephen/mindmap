@@ -16,39 +16,46 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 var del         = require('del');
+var log         = require('fancy-log');
 var gulp        = require('gulp');
-var gutil       = require('gulp-util');
+var babel       = require('gulp-babel');
+var cleanCSS    = require('gulp-clean-css');
 var jshint      = require('gulp-jshint');
-var uglify      = require('gulp-uglify');
+var minimist    = require('minimist');
 var concat      = require('gulp-concat');
-var less        = require('gulp-less');
-var minifyCSS   = require('gulp-minify-css');
 var prefix      = require('gulp-autoprefixer');
 var replace     = require('gulp-replace');
-var scp         = require('gulp-scp2');
+var rsync       = require('gulp-rsync');
+var through2    = require('through2');
 var workboxBuild = require('workbox-build');
 var zip         = require('gulp-zip');
 
-var env = gutil.env.env || 'dev';
-console.warn('ENVIRONMENT SET TO: '+env);
+var vsn         = '0.2.0';
+var buildDir = 'dist';
+var finalName = 'mindmap-'+vsn+'.jar'
+
+var argv = minimist(process.argv.slice(2));
+var env = argv['env'] || 'dev';
+log.warn('ENVIRONMENT SET TO: '+env);
 var config = require('./config.js')[env];
 
 gulp.task('clean', function(done) {
-  return del(['dist'], done);
+  return del([buildDir], done);
 });
 
 gulp.task('assets', function() {
   return gulp.src([ 'src/**/*.html', 'src/**/*.json', 'src/**/*.xslt' ])
-      .pipe(gulp.dest('dist'));
+      .pipe(gulp.dest(buildDir));
 });
 
 gulp.task('scripts', function() {
   return gulp.src([
     'src/js/**/*.js'
   ])
-  .pipe(config.js.uglify ? uglify({ mangle: true }) : gutil.noop())
-  .pipe(gulp.dest('dist/js'));
+  .pipe(config.js.minify ? babel({ presets: [ ["minify", { "builtIns": false }] ] }) : through2.obj())
+  .pipe(gulp.dest(buildDir+'/js'));
 });
 
 gulp.task('test', function() {
@@ -65,8 +72,8 @@ gulp.task('styles', function() {
   return gulp.src([
     'src/css/**/*.css'
   ])
-  .pipe(config.css.minify ? minifyCSS() : gutil.noop())
-  .pipe(gulp.dest('dist/css'));
+  .pipe(config.css.minify ? cleanCSS() : through2.obj())
+  .pipe(gulp.dest(buildDir+'/css'));
 });
 
 gulp.task('compile',
@@ -75,18 +82,18 @@ gulp.task('compile',
 
 gulp.task('gen-sw', function() {
   return workboxBuild.generateSW({
-    globDirectory: 'dist',
+    globDirectory: buildDir,
     globPatterns: [
       '**\/*.{html,json,js,css}',
     ],
-    swDest: 'dist/sw.js',
+    swDest: buildDir+'/sw.js',
   });
 });
 
 gulp.task('package', () =>
-  gulp.src(['dist/*','!dist/*.zip'])
+  gulp.src([buildDir+'/*','!'+buildDir+'/*.zip'])
       .pipe(zip('archive.zip'))
-      .pipe(gulp.dest('dist'))
+      .pipe(gulp.dest(buildDir))
 );
 
 gulp.task('build',
@@ -98,7 +105,7 @@ gulp.task('install',
 );
 
 gulp.task('deploy', function() {
-  return gulp.src(['dist/**/*','!dist/archive.zip'])
+  return gulp.src([buildDir+'/**/*','!'+buildDir+'/archive.zip'])
   .pipe(scp({
     host: config.server.host,
     username: config.server.usr,
