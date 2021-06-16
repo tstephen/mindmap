@@ -1,6 +1,6 @@
 /*
  *  MindMapper - web based mind mapping tool.
- *  Copyright (C) 2018 Tim Stephenson
+ *  Copyright (c) 2018-21 Tim Stephenson
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
