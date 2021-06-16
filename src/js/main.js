@@ -253,7 +253,8 @@ var $mm = (function () {
     // enable edit
     if (!me.readOnly) {
       document.querySelectorAll('.node').forEach(function(n) {
-        n.classList.add('draggable');
+        if (n.classList.contains('level1')) n.classList.add('static');
+        else n.classList.add('draggable');
       });
       document.querySelector('.root-node').classList.add('static');
     }
