@@ -33,8 +33,8 @@ var workboxBuild = require('workbox-build');
 var zip         = require('gulp-zip');
 
 var vsn         = '0.2.0';
-var buildDir = 'dist';
-var finalName = 'mindmap-'+vsn+'.jar'
+var buildDir    = 'dist';
+var finalName   = 'mindmap-'+vsn+'.jar'
 
 var argv = minimist(process.argv.slice(2));
 var env = argv['env'] || 'dev';
@@ -104,16 +104,27 @@ gulp.task('install',
   gulp.series('compile', 'assets', 'gen-sw', 'package')
 );
 
-gulp.task('deploy', function() {
-  return gulp.src([buildDir+'/**/*','!'+buildDir+'/archive.zip'])
-  .pipe(scp({
-    host: config.server.host,
-    username: config.server.usr,
-    privateKey: require('fs').readFileSync(config.server.keyFile),
-    dest: config.server.dir
-  }))
-  .on('error', function(err) {
-    console.log(err);
-  });
+gulp.task('_deploy', function() {
+  log.warn('Deploying to '+env);
+  if (config.server != undefined) {
+    return gulp.src([buildDir+'/**/*','!'+buildDir+'/archive.zip'])
+    .pipe(rsync({
+      root: buildDir+'/',
+      hostname: config.server.host,
+      destination: config.server.dir,
+      archive: false,
+      silent: false,
+      compress: true
+    }))
+    .on('error', function(err) {
+      console.log(err);
+    });
+  } else {
+    log.error('No config.server specified for '+env);
+  }
 });
+
+gulp.task('deploy',
+  gulp.series('install', '_deploy')
+);
 

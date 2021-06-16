@@ -22,5 +22,11 @@ module.exports = {
     css: {
       cssnano: true
     },
+    server: {
+      host: 'example.com',
+      usr: 'remoteuser',
+      dir: '/var/www',
+      privateKey: '/home/localuser/.ssh/id_rsa'
+    }
   }
 };
