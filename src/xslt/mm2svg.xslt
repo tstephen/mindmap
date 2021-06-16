@@ -91,9 +91,7 @@
 
       <style type="text/css">
         <![CDATA[
-          .link {
-            cursor: pointer;
-          }
+          .link { cursor: pointer; }
           ellipse.level1 { stroke-width: 8px }
           ellipse.level2 { stroke-width: 4px }
           ellipse.level3 { stroke-width: 2px }
@@ -130,7 +128,6 @@
 
     <xsl:element name="g" namespace="http://www.w3.org/2000/svg">
       <xsl:attribute name="class">
-        <xsl:text>node</xsl:text>
         <xsl:if test="@LINK"> link</xsl:if>
       </xsl:attribute>
       <xsl:apply-templates select="@LINK"/>

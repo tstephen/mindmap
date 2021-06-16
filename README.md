@@ -21,5 +21,9 @@ GPL v2 or later
 
 - make polyfill repeatable
 - add edges to polyfill
-- create new shapes
+- create new mindmap
+- create new shapes (new child node; new peer node) 
+- rename node
+- link nodes
+- undo?
 - test, test, test

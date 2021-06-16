@@ -52,3 +52,11 @@ text.link:active,
 text.link:hover {
   text-decoration: underline;
 }
+
+/** DRAG AND DROP */
+.static {
+  cursor: not-allowed;
+}
+.draggable {
+  cursor: move;
+}
