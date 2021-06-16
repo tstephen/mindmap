@@ -94,17 +94,34 @@
           .link {
             cursor: pointer;
           }
+          ellipse.level1 { stroke-width: 8px }
+          ellipse.level2 { stroke-width: 4px }
+          ellipse.level3 { stroke-width: 2px }
+          ellipse.level4 { stroke-width: 1px }
+          rect.level1 { stroke-width: 8px }
+          rect.level2 { stroke-width: 4px }
+          rect.level3 { stroke-width: 2px }
+          rect.level4 { stroke-width: 1px }
+          text { font-family: sans-serif }
+          text.level1 { font-size: 20px }
+          text.level2 { font-size: 16px }
+          text.level3 { font-size: 12px }
+          text.level4 { font-size: 10px }
         ]]>
       </style>
 
       <xsl:apply-templates select="//edge"/>
-      <xsl:apply-templates select="/map/node"/>
+      <xsl:apply-templates select="/map/node">
+        <xsl:with-param name="level"><xsl:value-of select="number(1)"/></xsl:with-param>
+      </xsl:apply-templates>
 
     </xsl:element>
   </xsl:template>
 
   <xsl:template match="node">
+    <xsl:param name="level"/>
     <xsl:variable name="pos" select="position()"></xsl:variable>
+    <xsl:comment>Processing level <xsl:value-of select="$level"/></xsl:comment>
     <xsl:element name="g" namespace="http://www.w3.org/2000/svg">
       <xsl:attribute name="class">
         <xsl:text>node</xsl:text>
@@ -116,7 +133,8 @@
           <xsl:element name="ellipse" namespace="http://www.w3.org/2000/svg">
             <xsl:attribute name="id"><xsl:value-of select="@ID"/></xsl:attribute>
             <xsl:attribute name="class">
-              <xsl:text>node</xsl:text>
+              <xsl:text>node level</xsl:text>
+              <xsl:value-of select="$level"/>
               <xsl:if test="@LINK"> link</xsl:if>
             </xsl:attribute>
             <xsl:attribute name="cx"><xsl:value-of select="dc:Bounds/@x+dc:Bounds/@width div 2"/></xsl:attribute>
@@ -139,7 +157,8 @@
           <xsl:element name="line" namespace="http://www.w3.org/2000/svg">
             <xsl:attribute name="id"><xsl:value-of select="@ID"/></xsl:attribute>
             <xsl:attribute name="class">
-              <xsl:text>node</xsl:text>
+              <xsl:text>node level</xsl:text>
+              <xsl:value-of select="$level"/>
               <xsl:if test="@LINK"> link</xsl:if>
             </xsl:attribute>
             <xsl:attribute name="x1"><xsl:value-of select="dc:Bounds/@x"/></xsl:attribute>
@@ -162,7 +181,8 @@
           <xsl:element name="rect" namespace="http://www.w3.org/2000/svg">
             <xsl:attribute name="id"><xsl:value-of select="@ID"/></xsl:attribute>
             <xsl:attribute name="class">
-              <xsl:text>node</xsl:text>
+              <xsl:text>node level</xsl:text>
+              <xsl:value-of select="$level"/>
               <xsl:if test="@LINK"> link</xsl:if>
             </xsl:attribute>
             <xsl:attribute name="x"><xsl:value-of select="dc:Bounds/@x"/></xsl:attribute>
@@ -187,11 +207,14 @@
       </xsl:choose>
       <xsl:element name="text" namespace="http://www.w3.org/2000/svg">
         <xsl:attribute name="class">
-          <xsl:text>node-label</xsl:text>
+          <xsl:text>node-label level</xsl:text>
+          <xsl:value-of select="$level"/>
           <xsl:if test="@LINK"> link</xsl:if>
         </xsl:attribute>
         <xsl:attribute name="x"><xsl:value-of select="dc:Bounds/@x+$fontSize*2"/></xsl:attribute>
         <xsl:attribute name="y"><xsl:value-of select="dc:Bounds/@y+$fontSize*1.8"/></xsl:attribute>
+        <xsl:attribute name="style">
+          <xsl:text>font-size:</xsl:text><xsl:value-of select="$fontSize+((5-$level)*4)"/></xsl:attribute>
         <!--xsl:apply-templates select="@LINK"/-->
         <xsl:value-of select="@TEXT"/>
       </xsl:element>
@@ -205,7 +228,9 @@
       </xsl:if>
     </xsl:element>
 
-    <xsl:apply-templates select="./node"/>
+    <xsl:apply-templates select="./node">
+      <xsl:with-param name="level"><xsl:value-of select="$level+1"/></xsl:with-param>
+    </xsl:apply-templates>
   </xsl:template>
 
   <xsl:template match="edge">
