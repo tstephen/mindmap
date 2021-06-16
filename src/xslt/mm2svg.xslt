@@ -98,6 +98,10 @@
           ellipse.level2 { stroke-width: 4px }
           ellipse.level3 { stroke-width: 2px }
           ellipse.level4 { stroke-width: 1px }
+          path.level1 { stroke-width: 8px }
+          path.level2 { stroke-width: 4px }
+          path.level3 { stroke-width: 2px }
+          path.level4 { stroke-width: 1px }
           rect.level1 { stroke-width: 8px }
           rect.level2 { stroke-width: 4px }
           rect.level3 { stroke-width: 2px }
@@ -110,7 +114,9 @@
         ]]>
       </style>
 
-      <xsl:apply-templates select="//edge"/>
+      <xsl:apply-templates select="/map/node/node/edge">
+        <xsl:with-param name="level"><xsl:value-of select="number(1)"/></xsl:with-param>
+      </xsl:apply-templates>
       <xsl:apply-templates select="/map/node">
         <xsl:with-param name="level"><xsl:value-of select="number(1)"/></xsl:with-param>
       </xsl:apply-templates>
@@ -120,8 +126,8 @@
 
   <xsl:template match="node">
     <xsl:param name="level"/>
-    <xsl:variable name="pos" select="position()"></xsl:variable>
-    <xsl:comment>Processing level <xsl:value-of select="$level"/></xsl:comment>
+    <xsl:comment>Processing node level <xsl:value-of select="$level"/></xsl:comment>
+
     <xsl:element name="g" namespace="http://www.w3.org/2000/svg">
       <xsl:attribute name="class">
         <xsl:text>node</xsl:text>
@@ -234,8 +240,15 @@
   </xsl:template>
 
   <xsl:template match="edge">
+    <xsl:param name="level"/>
+    <xsl:comment>Processing edge level <xsl:value-of select="$level"/></xsl:comment>
+
     <xsl:if test="../../dc:Bounds">
       <xsl:element name="path" namespace="http://www.w3.org/2000/svg">
+        <xsl:attribute name="class">
+          <xsl:text>path level</xsl:text>
+          <xsl:value-of select="$level"/>
+        </xsl:attribute>
         <xsl:attribute name="d">
           <xsl:text>M</xsl:text>
           <xsl:value-of select="../dc:Bounds/@x+50"/>
@@ -263,6 +276,10 @@
         </xsl:attribute>
       </xsl:element>
     </xsl:if>
+
+    <xsl:apply-templates select="../node/edge">
+      <xsl:with-param name="level"><xsl:value-of select="$level+1"/></xsl:with-param>
+    </xsl:apply-templates>
   </xsl:template>
 
   <xsl:template match="@LINK">
