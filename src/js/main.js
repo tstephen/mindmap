@@ -27,6 +27,7 @@ var $mm = (function () {
     scale: 1.0,
     scaleStep: 0.25,
     selectedElement: false,
+    // server: 'http://localhost:8000',
     server: 'https://mindmapper.knowprocess.com',
     svgContainer: document.getElementById('svg-content')
   };
@@ -62,7 +63,10 @@ var $mm = (function () {
   function displayContents(contents) {
     document.getElementById('raw-content').textContent = contents;
     renderSvg();
-    makeDraggable(me.svgContainer);
+    if (!me.readOnly) {
+      makeDraggable(me.svgContainer);
+      makeEditable();
+    }
 
     document.querySelectorAll('.loaded-btn').forEach(function(el) {
       el.setAttribute('style','display:inline');
@@ -76,8 +80,8 @@ var $mm = (function () {
         && Math.abs(me.curPos.y - coord.y) > 10) {
       dragEnd(evt);
     } else {
-      // click(evt);
-      // editText(evt);
+      click(evt);
+      editText(evt);
     }
   }
 
@@ -210,6 +214,12 @@ var $mm = (function () {
     svg.addEventListener('touchcancel',  dragEnd);
   }
 
+  function makeEditable() {
+    document.querySelectorAll('.node-label').forEach(function(n) {
+      n.addEventListener('click', editText, false/*capture*/);
+    });
+  }
+
   function openFile() {
     document.getElementById('file-input').click();
   }
@@ -244,17 +254,8 @@ var $mm = (function () {
     if (!me.readOnly) {
       document.querySelectorAll('.node').forEach(function(n) {
         n.classList.add('draggable');
-        // n.addEventListener('dragstart', startDrag);
-        // n.addEventListener('drag', drag);
-        // n.addEventListener('dragend',  dragEnd);
-        // n.addEventListener('drop',  dragEnd);
       });
-      document.querySelectorAll('.node-label').forEach(function(n) {
-        n.addEventListener('click', editText, false/*capture*/);
-      });
-      document.querySelectorAll('.node').forEach(function(n) {
-        n.addEventListener('click', editText, false/*capture*/);
-      });
+      document.querySelector('.root-node').classList.add('static');
     }
   }
 
@@ -268,6 +269,8 @@ var $mm = (function () {
     if (evt.target.classList.contains('draggable')) {
       me.selectedElement = evt.target;
 
+      // hide text node while dragging
+      me.selectedElement.nextElementSibling.style.display='none';
 
       me.dragOffset = me.curPos;
       me.dragOffset.x -= parseFloat(me.selectedElement.getAttributeNS(null, "x"));
