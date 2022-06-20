@@ -27,8 +27,8 @@ var $mm = (function () {
     scale: 1.0,
     scaleStep: 0.25,
     selectedElement: false,
-    // server: 'http://localhost:8000',
-    server: 'https://mindmapper.knowprocess.com',
+    server: 'http://localhost:8000',
+    // server: 'https://mindmapper.knowprocess.com',
     svgContainer: document.getElementById('svg-content')
   };
 
@@ -80,8 +80,8 @@ var $mm = (function () {
         && Math.abs(me.curPos.y - coord.y) > 10) {
       dragEnd(evt);
     } else {
-      click(evt);
-      editText(evt);
+      // click(evt);
+      // editText(evt);
     }
   }
 
@@ -168,8 +168,24 @@ var $mm = (function () {
 
   function editText(evt) {
     console.log('editText: '+evt.target.ID);
-      document.querySelector('.text-editing-container')
-          .setAttribute('style', 'display:inline;position:absolute;top:100px;left:100px;width:200px;height:100px;z-index:100');
+    me.editedElement = evt.target;
+
+    // display editable content
+    var text = document.querySelector('.text-editing-container');
+    text.innerHTML = evt.target.innerHTML;
+    text.style.border = 'red solid 1px';
+    text.style.display = 'inline';
+    text.style.position = 'absolute';
+    var bounds = evt.target.getBoundingClientRect();
+    text.style.left = bounds.x+'px';
+    text.style.top = bounds.y+'px';
+    text.addEventListener('blur', function(evt) {
+      $mm.editedElement.innerHTML = evt.target.innerHTML;
+      evt.target.style.display = 'none'; 
+    });
+
+    // hide current text
+    evt.target.style.display = 'none';
   }
 
   function fetchRenderer() {
